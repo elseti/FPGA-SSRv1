@@ -1,0 +1,207 @@
+module display_sequence (
+    input clk,  // clock
+    input rst,  // reset
+    //input round_no[4],
+    input s1[16],
+    input s2[16],
+    input s3[16],
+    /*output test1,
+    output test2, 
+    output test3,*/
+    output button1,
+    output button2,
+    output button3,
+    output button4,
+    output isDone
+    
+  ) {
+  
+  fsm buttonList(.clk(clk), .rst(rst)) = {INIT, CHECK, B1, B2, B3, B4, END};
+  alu al;
+  dff seq1[16](#INIT(0), .clk(clk), .rst(rst));
+  dff seq2[16](#INIT(0), .clk(clk), .rst(rst));
+  dff seq3[16](#INIT(0), .clk(clk), .rst(rst));
+  
+  dff but1[1](#INIT(0), .clk(clk), .rst(rst));
+  dff but2[1](#INIT(0), .clk(clk), .rst(rst));
+  dff but3[1](#INIT(0), .clk(clk), .rst(rst));
+  dff but4[1](#INIT(0), .clk(clk), .rst(rst));
+
+  always {
+    ////////// assignments ////////////
+    al.a=16b0;
+    al.b=d4; //4
+    al.alufn= b100001; //shift right
+    
+    button1= b0; //but1.q;
+    button2= b0; //but2.q;
+    button3= b0; //but3.q;
+    button4= b0; //but4.q;
+    isDone= b0; 
+    ///////////////////////////////////
+    //temp
+    /*test1= b0;
+    test2= b0;
+    test3= b0;*/
+    //////////////////
+    
+    case(buttonList.q){
+      buttonList.INIT:
+        seq1.d= s1;
+        seq2.d= s2;
+        seq3.d= s3;
+        
+        but1.d=b0;
+        but2.d=b0;
+        but3.d=b0;
+        but4.d=b0;
+        
+        buttonList.d= buttonList.CHECK;
+   
+      buttonList.CHECK:
+        button1=b0;
+        button2=b0;
+        button3=b0;
+        button4=b0;
+        if(seq1.q!=16b0){
+          //test1= b1;
+          if(seq1.q[3:0]==b0001){ //button1 light up
+            button1= b1;
+            //buttonList.d= buttonList.B1;
+            //shift right by 4
+            al.a= seq1.q;
+            seq1.d = al.res;
+          }
+          else if(seq1.q[3:0]==b0010){
+            button2= b1;
+            buttonList.d= buttonList.B2;
+            al.a= seq1.q;
+            seq1.d= al.res;
+          }
+          else if(seq1.q[3:0]==b0011){
+            button3= b1;
+            buttonList.d= buttonList.B3;
+            al.a= seq1.q;
+            seq1.d= al.res;
+          }
+          else if(seq1.q[3:0]==b0100){
+            button4= b1;
+            buttonList.d= buttonList.B4;
+            al.a= seq1.q;
+            seq1.d= al.res;
+          }
+        }
+        else if(seq2.q!=16b0){
+          //test2= b1;
+          if(seq2.q[3:0]==b0001){ //button1 light up
+            //buttonList.d= buttonList.B1;
+            button1= b1;
+            al.a= seq2.q;
+            seq2.d = al.res;
+          }
+          else if(seq2.q[3:0]==b0010){
+            //buttonList.d= buttonList.B2;
+            button2= b1;
+            al.a= seq2.q;
+            seq2.d= al.res;
+          }
+          else if(seq2.q[3:0]==b0011){
+            button3= b1;
+            //buttonList.d= buttonList.B3;
+            al.a= seq2.q;
+            seq2.d= al.res;
+          }
+          else if(seq2.q[3:0]==b0100){
+            button4= b1;
+            buttonList.d= buttonList.B4;
+            al.a= seq2.q;
+            seq2.d= al.res;
+          }
+        }
+        else if(seq3.q!=16b0){
+          //test3= b1;
+          if(seq3.q[3:0]==b0001){ //button1 light up
+            //buttonList.d= buttonList.B1;
+            button1= b1;
+            al.a= seq3.q;
+            seq3.d = al.res;
+          }
+          else if(seq3.q[3:0]==b0010){
+            //buttonList.d= buttonList.B2;
+            button2= b1;
+            al.a= seq3.q;
+            seq3.d= al.res;
+          }
+          else if(seq3.q[3:0]==b0011){
+            //buttonList.d= buttonList.B3;
+            button3= b1;
+            al.a= seq3.q;
+            seq3.d= al.res;
+          }
+          else if(seq3.q[3:0]==b0100){
+            //buttonList.d= buttonList.B4;
+            button4= b1;
+            al.a= seq3.q;
+            seq3.d= al.res;
+          }
+        }
+        else if(seq1.q==160 && seq2.q==16b0 && seq3.q==16b0){
+          buttonList.d= buttonList.END;
+        }
+          
+               
+        
+      buttonList.B1:
+        button1= b1;
+        /*but1.d= b1;
+        but2.d= b0;
+        but3.d= b0;
+        but4.d= b0;*/
+        buttonList.d= buttonList.CHECK;
+        
+      buttonList.B2:
+        button2= b1;
+        /*but1.d= b0;
+        but2.d= b1;
+        but3.d= b0;
+        but4.d= b0;*/
+        buttonList.d= buttonList.CHECK;
+        
+      buttonList.B3:
+        button3= b1;
+        /*but1.d= b0;
+        but2.d= b0;
+        but3.d= b1;
+        but4.d= b0;*/
+        buttonList.d= buttonList.CHECK;
+        
+      buttonList.B4:
+        button4= b1;
+        /*but1.d= b0;
+        but2.d= b0;
+        but3.d= b0;
+        but4.d= b1;*/
+        buttonList.d= buttonList.CHECK;
+      
+      buttonList.END:
+        //idk i guess do nothing
+        
+        /*but1.d= b0;
+        but2.d= b0;
+        but3.d= b0;
+        but4.d= b0;*/
+        button1= b0;
+        button2= b0;
+        button3= b0;
+        button4= b0;   
+        isDone= b1;
+        
+      default:
+        button1= b0;
+        button2= b0;
+        button3= b0;
+        button4= b0;        
+    }
+    
+  }
+}

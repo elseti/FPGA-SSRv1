@@ -1,0 +1,369 @@
+module fsm_module (
+    input clk,  // clock
+    input rst, // reset
+    input start, //start button
+    input button1,
+    input button2,
+    input button3,
+    input button4,
+    output test[16], //to test val of register
+    output test2[16],
+    output test3[16],
+    output stateCheck2[2],
+    output stateCheck[5], //to check states (testing only)
+    output led1,
+    output led2,
+    output led3,
+    output led4 //corresponds to each buttons's led
+ 
+  ) {
+  
+  // MODULE DECLARATION
+  
+  regfile_module regfile;
+  //display_sequence displaySeq;
+  alu al;
+  
+  fsm stateList(.clk(clk), .rst(rst))= {INIT, EMPTYREGISTER, START, L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, GENSEQ, DISPLAYSEQ, IDLE, WIN, LOSE, GAMEOVER};
+  
+  randomSequenceGenerator randomGen;
+  
+  // counters
+  counter fastClock(#SIZE(1), #DIV(1), .clk(clk), .rst(rst));
+  counter slowClock(#SIZE(1), #DIV(27), .clk(clk), .rst(rst));
+  counter timerClock(#SIZE(1), #DIV(25), .clk(clk), .rst(rst)); //strictly for timer
+  
+  ///////////////////////////////// dffs to track per clock /////////////////////////////////
+  dff register_no[4](.clk(clk), .rst(rst));
+  dff seq_no[2](.clk(clk), .rst(rst));
+  
+  dff seq1[16](#INIT(0), .clk(clk), .rst(rst));
+  dff seq2[16](#INIT(0), .clk(clk), .rst(rst));
+  dff seq3[16](#INIT(0), .clk(clk), .rst(rst));
+  
+  sig temp[16]; //temporary signal for temporary means
+  
+  always {
+    ///////////////////////////////// NECESSARY ASSIGNMENTS /////////////////////////////////////
+    regfile.read_address_1= 4b0;
+    regfile.read_address_2= 4b0;
+    regfile.write_address= 4b0;
+    regfile.data= 16b0;
+    regfile.clk= clk;
+    regfile.we= b0;
+    
+    led1= b0;
+    led2= b0;
+    led3= b0;
+    led4= b0;
+    
+    stateCheck= 5b0;
+    stateCheck2= 2b0;
+    test= 16b0;
+    test2= 16b0;
+    test3=16b0;
+    
+    randomGen.clk= clk;
+    randomGen.next= b0;
+    randomGen.round_no= 4b0;
+    randomGen.seed= d5; //arbitrary
+    randomGen.rst= rst;
+    
+    /*displaySeq.clk= fastClock.value;
+    displaySeq.rst= rst;
+    displaySeq.s1= 16b0;
+    displaySeq.s2= 16b0;
+    displaySeq.s3= 16b0; */
+    
+    //alu
+    al.a=16b0;
+    al.b=16b0;
+    al.alufn= b00000;
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////// STATES ////////////////////////////////////////
+    
+    case(stateList.q){
+    
+      stateList.INIT:
+        // write seed
+        register_no.d= b0000;
+        regfile.write_address= b1011;
+        regfile.data= d5;
+        regfile.we=b1;
+
+        //initialise seq_no (counter for writing randomGen's out)
+        seq_no.d= b00;
+        
+        //if start button is pressed, go to START
+        if(start==b1){
+          stateList.d= stateList.START;
+        }
+        
+        
+      stateList.START:
+        stateCheck= b00001;
+        
+        //empty all registers except the seed
+        if(register_no.q<= b1100){
+          if(register_no.q == b1011){ //ignore if it's the seed register
+            regfile.we=b0;
+            register_no.d= register_no.q+1;
+          }
+          else{
+            regfile.write_address= register_no.q;
+            regfile.data= b1111111111111111;
+            regfile.we= b1;
+            register_no.d= register_no.q+1;
+          }
+
+        }
+        //if already emptied out, go to level 1
+        else{
+          register_no.d= b0000;
+          regfile.we=b0;
+          stateList.d= stateList.L1; //go to level 1
+        }
+        
+           
+      stateList.GENSEQ: //generates the random button sequence
+        stateCheck= b00010;
+        
+        //regfile.read_address_1= b0101; //read round number
+        //regfile.we= b0;
+        //test= regfile.out_a;
+        randomGen.round_no= d1; //regfile.out_a[3:0]; //pass round_no; only need 4 bits
+        
+        //regfile.read_address_2= b1011; //read seed
+        randomGen.seed= d5;//regfile.out_b; //pass stored seed
+        
+        seq1.d= randomGen.out1;
+        seq2.d= randomGen.out2;
+        seq3.d= randomGen.out3;
+        
+        test= seq1.q;
+        //alu to shift right
+        al.b= d4; // shift right by 4
+        al.alufn= b100001; //shift right
+        
+        //led1, 2, 3, 4 
+        led1= b0;
+        led2= b0;
+        led3= b0;
+        led4= b0;
+        
+        if(seq1.q!=16b0){
+          //test1= b1;
+          if(seq1.q[3:0]==b0001){ //button1 light up
+            led1= b1;
+            al.a= seq1.q;
+            seq1.d = al.res;
+          }
+          else if(seq1.q[3:0]==b0010){
+            led2= b1;
+            al.a= seq1.q;
+            seq1.d= al.res;
+          }
+          else if(seq1.q[3:0]==b0011){
+            led3= b1;
+            al.a= seq1.q;
+            seq1.d= al.res;
+          }
+          else if(seq1.q[3:0]==b0100){
+            led4= b1;
+            al.a= seq1.q;
+            seq1.d= al.res;
+          }
+        }
+        else if(seq2.q!=16b0){
+          //test2= b1;
+          if(seq2.q[3:0]==b0001){ //button1 light up
+            led1= b1;
+            al.a= seq2.q;
+            seq2.d = al.res;
+          }
+          else if(seq2.q[3:0]==b0010){
+            led2= b1;
+            al.a= seq2.q;
+            seq2.d= al.res;
+          }
+          else if(seq2.q[3:0]==b0011){
+            led3= b1;
+            al.a= seq2.q;
+            seq2.d= al.res;
+          }
+          else if(seq2.q[3:0]==b0100){
+            led4= b1;
+            al.a= seq2.q;
+            seq2.d= al.res;
+          }
+        }
+        else if(seq3.q!=16b0){
+          //test3= b1;
+          if(seq3.q[3:0]==b0001){ //button1 light up
+            led1= b1;
+            al.a= seq3.q;
+            seq3.d = al.res;
+          }
+          else if(seq3.q[3:0]==b0010){
+            //buttonList.d= buttonList.B2;
+            led2= b1;
+            al.a= seq3.q;
+            seq3.d= al.res;
+          }
+          else if(seq3.q[3:0]==b0011){
+            //buttonList.d= buttonList.B3;
+            led3= b1;
+            al.a= seq3.q;
+            seq3.d= al.res;
+          }
+          else if(seq3.q[3:0]==b0100){
+            //buttonList.d= buttonList.B4;
+            led4= b1;
+            al.a= seq3.q;
+            seq3.d= al.res;
+          }
+        }
+        else if(seq1.q==160 && seq2.q==16b0 && seq3.q==16b0){
+          led1= b0;
+          led2= b0;
+          led3= b0;
+          led4= b0;
+        }
+        /*
+        if(displaySeq.isDone==b1){
+          stateList.d= stateList.IDLE;
+        }
+        else{
+          led1= b1;//displaySeq.button1;
+          //test= displaySeq.button1;
+          led2= displaySeq.button2;
+          //test2= displaySeq.button3;
+          led3= displaySeq.button3;
+          //test3=displaySeq.button3;
+          led4= displaySeq.button4;
+        }*/
+        
+        /*
+        //write random sequences generated to regfile
+        case(seq_no.q){
+          b00:
+            stateCheck2= b01;
+            regfile.we= b1;
+            regfile.write_address= b0010; //write to button sequence 1
+            regfile.data= randomGen.out1;
+            //test= randomGen.out1;
+            seq_no.d= seq_no.q+1;
+            
+          b01:
+            stateCheck2= b10;
+            regfile.we= b1;
+            regfile.write_address= b0011;
+            regfile.data= randomGen.out2;
+            //test2= randomGen.out2;
+            seq_no.d= seq_no.q+1;
+            
+          b10:
+            stateCheck2= b11;
+            regfile.we= b1;
+            regfile.write_address= b0100;
+            regfile.data= randomGen.out3;
+            //test3= randomGen.out3;
+            seq_no.d= seq_no.q+1;
+            
+          b11:
+            regfile.we= b0;
+            test= b1111111111111111;
+            regfile.read_address_1= b0100;
+            test= regfile.out_a;
+            stateList.d= stateList.DISPLAYSEQ;
+        }*/
+
+
+      stateList.DISPLAYSEQ:
+        stateCheck= b00011;
+        
+        // pass button sequences generated previously to displaySeq
+        /*regfile.we=b0;
+        regfile.read_address_1= b0010;
+        displaySeq.s1= regfile.out_a;
+        test= regfile.out_a;
+        
+        regfile.read_address_2= b0011;
+        //displaySeq.s2= regfile.out_b;
+        //test2= regfile.out_b;
+        
+        regfile.read_address_1= b0100;
+        //displaySeq.s3= regfile.out_a;
+        //test3= regfile.out_a;
+        
+        // display the sequences
+        //if(displaySeq.isDone==b1){
+          stateList.d= stateList.IDLE;
+        }
+        else{
+          led1= displaySeq.button1;
+          led2= displaySeq.button2;
+          led3= displaySeq.button3;
+          led4= displaySeq.button4;
+        }*/
+        
+        
+      stateList.L1:
+        stateCheck= b00100;
+        regfile.write_address= b0101; //write to round number
+        regfile.data= d1; //write 1
+        regfile.we= b1;
+       
+        stateList.d= stateList.GENSEQ;
+        
+        
+        /*regfile.read_address_1= b1011;
+        regfile.we= b0;
+        test[15:0]= regfile.out_a[15:0];*/
+        
+        
+      stateList.L2:
+        stateCheck= b00101;
+        
+      stateList.L3:
+        stateCheck= b00110;
+        
+      stateList.L4:
+        stateCheck= b00111;
+        
+      stateList.L5:
+        stateCheck= b01000;
+        
+      stateList.L6:
+        stateCheck= b01001;
+        
+      stateList.L7:
+        stateCheck= b01010;
+        
+      stateList.L8:
+        stateCheck= b01011;
+        
+      stateList.L9:
+        stateCheck= b01100;
+        
+      stateList.L10:
+        stateCheck= b01101;
+        
+      stateList.IDLE:
+        stateCheck= b01110;
+        
+      stateList.WIN:
+        stateCheck= b01111;
+        
+      stateList.LOSE:
+        stateCheck= b10000;
+        
+      stateList.GAMEOVER:
+        stateCheck= b10001;
+        
+        //stateList.d = stateList.START;
+      
+    }
+    
+  }
+}

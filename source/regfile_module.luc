@@ -1,0 +1,88 @@
+module regfile_module (
+    input clk,  // clock
+    input read_address_1[4],
+    input read_address_2[4],
+    output out_a[16],
+    output out_b[16],
+    output score[16],
+    output timer[16],
+    input write_address[4],
+    input data[16],
+    input we
+  ) 
+
+{
+  .clk(clk){
+    dff current_score[16];
+    dff current_timer[16];
+    dff button_seq_1[16];
+    dff button_seq_2[16];
+    dff button_seq_3[16];
+    dff round_counter[16];
+    dff button_input_1[16];
+    dff button_input_2[16];
+    dff button_input_3[16];
+    dff sequence_counter[16];
+    dff input_counter[16];
+    dff seed[16];
+    dff start_button[16];
+  }
+  
+  always {
+    //write port
+    if (we){
+      case(write_address){
+        b0000 : current_score.d = data;
+        b0001 : current_timer.d = data;
+        b0010 : button_seq_1.d = data;
+        b0011 : button_seq_2.d = data;
+        b0100 : button_seq_3.d = data;
+        b0101 : round_counter.d = data;
+        b0110 : button_input_1.d = data;
+        b0111 : button_input_2.d = data;
+        b1000 : button_input_3.d = data;
+        b1001 : sequence_counter.d = data;
+        b1010 : input_counter.d = data;
+        b1011 : seed.d= data;
+        b1100 : start_button.d= data;
+      }
+   }
+    
+    case(read_address_1){
+      b0000 : out_a = current_score.q;
+      b0001 : out_a = current_timer.q;
+      b0010 : out_a = button_seq_1.q;
+      b0011 : out_a = button_seq_2.q;
+      b0100 : out_a = button_seq_3.q;
+      b0101 : out_a = round_counter.q;
+      b0110 : out_a = button_input_1.q;
+      b0111 : out_a = button_input_2.q;
+      b1000 : out_a = button_input_3.q;
+      b1001 : out_a = sequence_counter.q;
+      b1010 : out_a = input_counter.q;
+      b1011 : out_a = seed.q;
+      b1100 : out_a = start_button.q;
+      default : out_a = 160;
+    }
+    
+    case(read_address_2){
+      b0000 : out_b = current_score.q;
+      b0001 : out_b = current_timer.q;
+      b0010 : out_b = button_seq_1.q;
+      b0011 : out_b = button_seq_2.q;
+      b0100 : out_b = button_seq_3.q;
+      b0101 : out_b = round_counter.q;
+      b0110 : out_b = button_input_1.q;
+      b0111 : out_b = button_input_2.q;
+      b1000 : out_b = button_input_3.q;
+      b1001 : out_b = sequence_counter.q;
+      b1010 : out_b = input_counter.q;
+      b1011 : out_b = seed.q;
+      b1100 : out_b = start_button.q;
+      default : out_b = 160;
+    }
+    
+    // For debugging
+    score = current_score.q;
+    timer = current_timer.q;
+}

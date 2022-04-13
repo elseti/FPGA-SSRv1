@@ -1,0 +1,233 @@
+module randomSequenceGenerator (
+    input clk,  // clock
+    input rst,  // reset
+    input seed[32], //value of seed must change everytime pass round?
+    input next,
+    input round_no[4], //between 1 to 10
+    output out1[16], //part 1 (4 buttons)
+    output out2[16], //part 2
+    output out3[16] //part 3
+     
+  ) {
+  
+  //counter slowClock(#SIZE(1), #DIV(26), .clk(clk), .rst(rst));
+	 //edge_detector slowClockEdge(#RISE(1), #FALL(0), .clk(clk));
+  
+  pn_gen pngen;
+  sig pngen_out[32];
+  
+  
+  sig seq1[3];
+  sig seq2[3];
+  sig seq3[3];
+  sig seq4[3];
+  sig seq5[3];
+  sig seq6[3];
+  sig seq7[3];
+  sig seq8[3];
+  sig seq9[3];
+  sig seq10[3];
+  sig seq11[3];
+
+  always {
+    out1= 16b0;
+    out2= 16b0;
+    out3= 16b0;
+  
+    
+    //slowClockEdge.in = slowClock.value;
+    pngen.seed = seed; //seed can be changed
+    pngen.next= next;
+    pngen.rst= rst;
+    pngen.clk= clk;
+    pngen_out= pngen.num;
+    
+    seq1= pngen_out[1:0];
+    seq2= pngen_out[3:2];
+    seq3= pngen_out[5:4];
+    seq4= pngen_out[7:6];
+    seq5= pngen_out[9:8];
+    seq6= pngen_out[11:10];
+    seq7= pngen_out[13:12];
+    seq8= pngen_out[15:14];
+    seq9= pngen_out[17:16];
+    seq10= pngen_out[19:18];
+    seq11= pngen_out[21:20];
+    
+    case(seq1){
+      b000: seq1=b001;
+      b001: seq1=b010;
+      b010: seq1=b011;
+      b011: seq1=b100;
+    }
+    case(seq2){
+      b000: seq2=b001;
+      b001: seq2=b010;
+      b010: seq2=b011;
+      b011: seq2=b100;
+    }
+    case(seq3){
+      b000: seq3=b001;
+      b001: seq3=b010;
+      b010: seq3=b011;
+      b011: seq3=b100;
+    }
+    case(seq4){
+      b000: seq4=b001;
+      b001: seq4=b010;
+      b010: seq4=b011;
+      b011: seq4=b100;
+    }
+    case(seq5){
+      b000: seq5=b001;
+      b001: seq5=b010;
+      b010: seq5=b011;
+      b011: seq5=b100;
+    }
+    case(seq6){
+      b000: seq6=b001;
+      b001: seq6=b010;
+      b010: seq6=b011;
+      b011: seq6=b100;
+    }
+    case(seq7){
+      b000: seq7=b001;
+      b001: seq7=b010;
+      b010: seq7=b011;
+      b011: seq7=b100;
+    }
+    case(seq8){
+      b000: seq8=b001;
+      b001: seq8=b010;
+      b010: seq8=b011;
+      b011: seq8=b100;
+    }
+    case(seq9){
+      b000: seq9=b001;
+      b001: seq9=b010;
+      b010: seq9=b011;
+      b011: seq9=b100;
+    }
+    case(seq10){
+      b000: seq10=b001;
+      b001: seq10=b010;
+      b010: seq10=b011;
+      b011: seq10=b100;
+    }
+    case(seq11){
+      b000: seq11=b001;
+      b001: seq11=b010;
+      b010: seq11=b011;
+      b011: seq11=b100;
+    }
+    
+    case(round_no){
+      d1: 
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+       
+      d2:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+      
+      d3:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+        out1[15:12]= seq4;
+      
+      d4:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+        out1[15:12]= seq4;
+        out2[3:0]= seq5;
+      
+      d5:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+        out1[15:12]= seq4;
+        out2[3:0]= seq5;
+        out2[7:4]= seq6;
+      
+      d6:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+        out1[15:12]= seq4;
+        out2[3:0]= seq5;
+        out2[7:4]= seq6;
+        out2[11:8]= seq7;
+        
+      d7:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+        out1[15:12]= seq4;
+        out2[3:0]= seq5;
+        out2[7:4]= seq6;
+        out2[11:8]= seq7;
+        out2[15:12]= seq8;
+        
+      d8:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+        out1[15:12]= seq4;
+        out2[3:0]= seq5;
+        out2[7:4]= seq6;
+        out2[11:8]= seq7;
+        out2[15:12]= seq8;
+        out3[3:0]= seq9;
+      
+      
+      d9:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+        out1[15:12]= seq4;
+        out2[3:0]= seq5;
+        out2[7:4]= seq6;
+        out2[11:8]= seq7;
+        out2[15:12]= seq8;
+        out3[3:0]= seq9;
+        out3[7:4]= seq10;
+        
+      
+      d10:
+        out1[3:0]= seq1;
+        out1[7:4]= seq2;
+        out1[11:8]= seq3;
+        out1[15:12]= seq4;
+        out2[3:0]= seq5;
+        out2[7:4]= seq6;
+        out2[11:8]= seq7;
+        out2[15:12]= seq8;
+        out3[3:0]= seq9;
+        out3[7:4]= seq10;
+        out3[11:8]= seq11;
+     
+        
+        
+    }
+    
+    /*pos1= pos*4-1;
+    pos2= pos*4-4;
+    
+    temp= pngen.num[pos1:pos2];
+    temp[3]= b0; //ensures that MSB of temp will be 0 (we only need 0000 to 0100 for 4 buttons + 1 nothing state)
+    
+    //if(slowClockEdge.out==b1){
+      //ensures that output is between 0001 to 0100
+    case(temp){
+      b0111: out= b0001;
+      b0110: out= b0010;
+      b0101: out= b0011;
+      default: out= temp;
+    }*/
+    
+    
+  }
+}

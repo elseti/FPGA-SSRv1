@@ -1,0 +1,151 @@
+module au_top2 (
+    input clk,              // 100MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input usb_rx,           // USB->Serial input
+    output usb_tx,          // USB->Serial output
+    output io_led [3][8],   // LEDs on IO Shield
+    output io_seg [8],      // 7-segment LEDs on IO Shield
+    output io_sel [4],      // Digit select on IO Shield
+    input io_button [5],    // 5 buttons on IO Shield
+    input io_dip [3][8] // DIP switches on IO Shield
+
+  ) {
+  
+  sig rst;                  // reset signal
+
+  randomSequenceGenerator randomGen;
+  display_sequence displaySeq;
+  //stopwatch timer;
+  timer timer1;  
+  regfile_module regfile;
+  fsm_module fsmMod;
+  
+  counter slowClock(#SIZE(1), #DIV(27), .clk(clk), .rst(rst));
+  counter timerClock(#SIZE(1), #DIV(25), .clk(clk), .rst(rst)); //strictly for timer
+  
+  
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+  //fsm testState(.clk(clk), .rst(rst))= {S1, S2};
+    
+  }
+  
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+    
+    usb_tx = usb_rx;        // loop serial port
+    
+    led = 8h00;             // turn LEDs off
+    
+    io_led = 3x{{8h00}};    // turn LEDs off
+    io_seg = 8hff;          // turn segments off
+    io_sel = 4hf;           // select no digits
+    
+ 
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    //some necessary declarations
+    
+    //ALU
+    //aluModule.a=16b0;
+    //aluModule.b=16b0;
+    //aluModule.alufn=alufn;
+    
+    //Random Sequence Generator
+    randomGen.rst= rst;
+    randomGen.clk= clk;
+    randomGen.next= b0;
+    randomGen.seed= b1; //temporary, do what you will can use clk also
+    randomGen.round_no= b0; //does nothing, supposedly
+    
+    //Display Sequence
+    displaySeq.s1= 16b0;
+    displaySeq.s2= 16b0;
+    displaySeq.s3= 16b0;
+    displaySeq.clk= slowClock.value;
+    displaySeq.rst= rst;
+    //displaySeq.round_no= b
+    
+    //timer
+    timer1.rst= rst;
+    timer1.clk= timerClock.value;    
+    
+    //regfile
+    regfile.read_address_1= 4b0;
+    regfile.read_address_2= 4b0;
+    regfile.write_address= 4b0;
+    regfile.data= 16b0;
+    regfile.clk= clk;
+    regfile.we= b0;
+    
+    fsmMod.button1= b0;
+    fsmMod.button2= b0;
+    fsmMod.button3= b0;
+    fsmMod.button4= b0;
+    fsmMod.clk= slowClock.value; //for now
+    fsmMod.rst= rst;
+    fsmMod.start=b0;
+    
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    
+    fsmMod.start=b1;
+    //io_led[0]= fsmMod.stateCheck;
+    /*io_led[1]= fsmMod.test[7:0];
+    io_led[2]= fsmMod.test[15:8];*/
+    
+    /*io_led[0][0]= fsmMod.test;
+    io_led[0][1]= fsmMod.test2;
+    io_led[0][2]= fsmMod.test3;*/
+    //io_led[1]= fsmMod.test2;
+    
+    //io_led[2][4:0]= fsmMod.stateCheck;
+    //io_led[2][7:6]= fsmMod.stateCheck2;
+    
+    io_led[1]= fsmMod.test[15:8];
+    io_led[0]= fsmMod.test[7:0];
+    
+    io_led[2][0]= fsmMod.led1;
+    io_led[2][1]= fsmMod.led2;
+    io_led[2][2]= fsmMod.led3;
+    io_led[2][3]= fsmMod.led4;
+    //io_led[0][5:0]= timer1.out;
+    
+    /*randomGen.seed= d5;
+    randomGen.round_no= d1; 
+    
+    io_led[1]= randomGen.out1[7:0];
+    io_led[2]= randomGen.out2[15:8];
+    
+    displaySeq.s1= randomGen.out1;
+    displaySeq.s2= randomGen.out2;
+    displaySeq.s3= randomGen.out3;
+    
+    io_led[0][0]= displaySeq.button1;
+    io_led[0][1]= displaySeq.button2;
+    io_led[0][2]= displaySeq.button3;
+    io_led[0][3]= displaySeq.button4;*/
+    /*case(testState.q){
+      testState.S1:
+        regfile.write_address= 4b0;
+        regfile.data= d10;
+   
+        regfile.we= b1;
+        testState.d= testState.S2;
+        
+      testState.S2:
+        regfile.read_address_1 = b0000;
+        regfile.we=b0;
+    
+        io_led[1]= regfile.out_a;*/
+       
+        
+    
+    }
+    
+    
+  }
